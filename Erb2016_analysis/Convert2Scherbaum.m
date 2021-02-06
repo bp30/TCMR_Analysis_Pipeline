@@ -11,7 +11,7 @@ addpath(genpath('Source'))
 clear
 
 %% Processing All_trials files
-% Navigate to the cleaned data files for All_trials folder
+% Navigate to folder containing cleaned data files for All_trials 
 cd 'C:\Users\dpen466\Google Drive\Phd (1)\Share_with_Chris\TCMR_Analysis_Pipeline\Erb2016_data\All_trials_cleaneddata'
 % Identify all the All_trial files in the folder
 file_names = dir ('*.csv');
@@ -82,7 +82,12 @@ for participant_n = 1:length(file_names)
     % Save the file as logn.mat
     save(fname, 'trials');
 end
-cd ../
+cd ../../
+
+% Optional: To run if spilting data file is necessary
+%Spilt_response
+
+
 %% Note: right now the logn file saved, the n number for each participant does not
 % match the once in raw data, so removed participants are skip, i.e. if
 % participant 4 is removed then log4 is actually participant 5.
