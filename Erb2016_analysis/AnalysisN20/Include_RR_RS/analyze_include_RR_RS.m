@@ -28,9 +28,7 @@
 % BP comment: it generates combine each struct to a larger struct where
 % each row is one participant and each column is a variablead
 clear 
-addpath(genpath('C:\Users\dpen466\Google Drive\Phd (1)\Matlab_scripts\TCMR_1_1'))
-addpath(genpath('C:\Users\dpen466\Google Drive\Phd (1)\Matlab_scripts\geom2d'))
-addpath(genpath('C:\Users\dpen466\Google Drive\Phd (1)\Matlab_scripts\FMINSEARCHBND'))
+addpath(genpath('../../Source'))
 n = 20 % change to the number of participants
 for p = 1:n %loop from 1 to N number of participants
     out('Loading log ',p);% BP:output on terminal saying which dataset is loading now
@@ -41,12 +39,12 @@ for p = 1:n %loop from 1 to N number of participants
 end
 
 %% perform preprocessing
-sf = 160;% sampling was at 95 Hz
+sf = 160;% sampling was at 160 Hz
 warp_samples = 100;% 100 time slices for time normalized trajectories;
-stimlock_samples = ceil(sf*2.5);% 2.5 seconds max response time, 95 samples per second --> maximum samples planned for stimulus locked trajetories - rest is filled with nan
-screen_width = 50;% width of screen in the experiment BP: Scherbaum has pixel here but hand trajectory is measured in cm
+stimlock_samples = ceil(sf*2.5);% 2.5 seconds max response time, 160 samples per second --> maximum samples planned for stimulus locked trajetories - rest is filled with nan
+screen_width = 50;% width of screen in the experiment BP: Scherbaum has pixel here but hand trajectory is measured in cm (for us it is 50cm)
 
-for p=1:length(pdata)
+for p = 1:length(pdata)
     out('Preprocessing dataset ',p,'...');
     %initialize matrices for stimulus locked raw data 
     pdata(p).x_stimlock=nan(length(pdata(p).trials),stimlock_samples); % BP:generate nan arrays for x, t and y in pdata for each participants that sets max RT to 2.5s 
@@ -71,7 +69,7 @@ for p=1:length(pdata)
         pdata(p).t_stimlock(tr,:)=normLength(t,stimlock_samples,0);
         % BP: normLength (signal, thelength, interpolate): interpolate or fillup/cut a vector to specific length-
         % -signal=vector or matrix(trial x time) 
-        % -thelength: length of data (default:100)
+        % -thelength: length of data (default = 100)
         % -norming procedure:
         % 0 => fillup with NaNs; [0,f] => fillup with f; if f==inf, fill up with last value in signal
         % 1 => indicates interpolation (default);
@@ -138,22 +136,19 @@ title('velocity (px/ms)')
 clear betas
 figure
 for p = 1:length(pdata)  
-    % NOTE BP: Modification are required here depending on number of predictor
-    % utilized
+    % NOTE BP: Modification are required here depending on number of predictor utilized
     % calc regressors of each participant
-    congs=pdata(p).congruency;% congruency
-    n1response=pdata(p).response~=[0;pdata(p).response(1:end-1)];%response repetition bias
-    pre_cong= pdata(p).previous_congruency;
+    n1response = pdata(p).response~=[0;pdata(p).response(1:end-1)];% response repetition bias
+    congs = pdata(p).congruency;% congruency
+    pre_cong = pdata(p).previous_congruency;
     % BP: this creates a data array of 0 and 1 with 1 representing a change in responseN-1 vs responseN, this predictor is used to test if response repetition across trials influence angle trajectory
-    
     % NOTE BP: this should also change depending on predictor numbers
     % concatenate regressors and normalize each to [-1,1]
-    regressors=normalizeRegressors([n1response, congs, pre_cong]); 
+    regressors = normalizeRegressors([n1response, congs, pre_cong]); 
     % BP: the code above generates three arrays of regresssor where changes  in responseN-1 vs responseN is coded as 1 and repetition is coded as -1.-
     % -Also congruent trials are coded as -1 and incongruent = 1, so that it
     % matches shift toward target will be positive when we run the analysis.
     % pre_cong is where previous congruent = -1 and previous incongruent = 1
-    % NOTE: this 
     
     %define data for TCMR
     regdata=pdata(p).angle_warp;

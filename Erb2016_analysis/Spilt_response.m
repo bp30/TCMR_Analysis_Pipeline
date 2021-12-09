@@ -21,19 +21,21 @@ for participant_n = 1: length(file_names)
     t = cell(length(allTrials(participant_n).Trial), 1);
     fprintf('Spilting participant: %d\n', participant_n)
     for trial_n = 1:length(trial_uniq)
-        x_data = dynamics(participant_n).x(dynamics(participant_n).Trial==trial_uniq(trial_n));% code to extract x, y and t from the correct trial
-        y_data = dynamics(participant_n).y(dynamics(participant_n).Trial==trial_uniq(trial_n));
-        t_data = dynamics(participant_n).t(dynamics(participant_n).Trial==trial_uniq(trial_n));
+        x_data = dynamics(participant_n).x(dynamics(participant_n).Trial == trial_uniq(trial_n));% code to extract x, y and t from the correct trial
+        y_data = dynamics(participant_n).y(dynamics(participant_n).Trial == trial_uniq(trial_n));
+        t_data = dynamics(participant_n).t(dynamics(participant_n).Trial == trial_uniq(trial_n));
         x{trial_n, 1} = x_data';% start filling in with double arrays
         y{trial_n, 1} = y_data';
         t{trial_n, 1} = t_data';
-        congruency = num2cell(allTrials(participant_n).Congruency); % convert predictors from double to cell
-        pre_cong = num2cell(allTrials(participant_n).Previous_congruency);
-        trial_sequence = num2cell(allTrials(participant_n).trial_sequence);
-        response = num2cell(allTrials(participant_n).LocationTouched);
-        rt = num2cell(allTrials(participant_n).RT);
-        data = [congruency pre_cong trial_sequence response rt x y t]; % binds all variables into one cell array
     end
+    % Extract predictor information from All_trials
+    congruency = num2cell(allTrials(participant_n).Congruency); % convert predictors from double to cell
+    pre_cong = num2cell(allTrials(participant_n).Previous_congruency);
+    trial_sequence = num2cell(allTrials(participant_n).trial_sequence);
+    response = num2cell(allTrials(participant_n).LocationTouched);
+    rt = num2cell(allTrials(participant_n).RT);
+    data = [congruency pre_cong trial_sequence response rt x y t]; % binds all variables into one cell array
+
     % Spilt data file accoridng to trial sequence
     data_RR = data([data{:,3}] == 1,:);% Response repeat
     data_RR = data_RR (:,[1,2,4:8]);

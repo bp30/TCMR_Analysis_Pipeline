@@ -12,7 +12,7 @@ clear
 
 %% Processing All_trials files
 % Navigate to folder containing cleaned data files for All_trials 
-cd 'C:\Users\dpen466\Google Drive\Phd (1)\Share_with_Chris\TCMR_Analysis_Pipeline\Erb2016_data\All_trials_cleaneddata'
+cd '../Erb2016_data/All_trials_cleaneddata/'
 % Identify all the All_trial files in the folder
 file_names = dir ('*.csv');
 % Convert the struct of filenames for Alltrials into cells
@@ -66,16 +66,16 @@ for participant_n = 1:length(file_names)
         x{trial_n, 1} = x_data';% start filling in with double arrays
         y{trial_n, 1} = y_data';
         t{trial_n, 1} = t_data';
+    end   
+    % Extract predictor information from All_trials
+    congruency = num2cell(allTrials(participant_n).Congruency); % convert predictors from double to cell
+    pre_cong = num2cell(allTrials(participant_n).Previous_congruency);
+    response = num2cell(allTrials(participant_n).LocationTouched);
+    rt = num2cell(allTrials(participant_n).RT);
         
-        % Extract predictor information from All_trials
-        congruency = num2cell(allTrials(participant_n).Congruency); % convert predictors from double to cell
-        pre_cong = num2cell(allTrials(participant_n).Previous_congruency);
-        response = num2cell(allTrials(participant_n).LocationTouched);
-        rt = num2cell(allTrials(participant_n).RT);
-        
-        % Bind all variables into one cell array
-        data = [congruency response pre_cong rt x y t]; 
-    end
+    % Bind all variables into one cell array
+    data = [congruency response pre_cong rt x y t]; 
+    
     % Convert the cell array to struct so it is in the appropriate formate for TCMR
     trials = cell2struct(data, fieldnames, 2)'; 
     fname = sprintf('log%d.mat', participant_n);
