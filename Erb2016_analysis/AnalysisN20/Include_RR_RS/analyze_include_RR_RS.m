@@ -29,7 +29,7 @@
 % each row is one participant and each column is a variablead
 clear 
 addpath(genpath('../../Source'))
-n = 20 % change to the number of participants
+n = 20; % change to the number of participants
 for p = 1:n %loop from 1 to N number of participants
     out('Loading log ',p);% BP:output on terminal saying which dataset is loading now
     load(out('./log',p,'.mat')); % BP: load logn.mat file (datafile for each participant)
@@ -42,7 +42,7 @@ end
 sf = 160;% sampling was at 160 Hz
 warp_samples = 100;% 100 time slices for time normalized trajectories;
 stimlock_samples = ceil(sf*2.5);% 2.5 seconds max response time, 160 samples per second --> maximum samples planned for stimulus locked trajetories - rest is filled with nan
-screen_width = 50;% width of screen in the experiment BP: Scherbaum has pixel here but hand trajectory is measured in cm (for us it is 50cm)
+screen_width = 1280;% width of screen in the experiment BP: Scherbaum has pixel here but hand trajectory is measured in cm (for us it is 50cm)
 
 for p = 1:length(pdata)
     out('Preprocessing dataset ',p,'...');
@@ -88,16 +88,120 @@ end
 
 % plot data by condition
 % aggregate data
-clear cx ix
+clear ca ia pca pia n1r_true n1r_false
 % BP: below draws the time course of average movements on X-axis for both conditions
+
 for p=1:length(pdata)
-    cx(p,:)=nanmean(pdata(p).x_warp(pdata(p).congruency==1,:));%bp: nanmeans extracts mean from a dataset that ignores nan values
-    ix(p,:)=nanmean(pdata(p).x_warp(pdata(p).congruency==2,:));
+    % OG: average angle warp instead of x_warp --> congruency
+    % ca - congruent angle
+    % ci - incongruent angle
+    ca(p,:)=nanmean(pdata(p).angle_warp(pdata(p).congruency==1,:));%bp: nanmeans extracts mean from a dataset that ignores nan values
+    ia(p,:)=nanmean(pdata(p).angle_warp(pdata(p).congruency==2,:));
+    
+    %OG: average angle_warp --> previous_congruency
+    pca(p,:)=nanmean(pdata(p).angle_warp(pdata(p).previous_congruency==1,:));
+    pia(p,:)=nanmean(pdata(p).angle_warp(pdata(p).previous_congruency==2,:));
+    
+    %OG: average angle_warp --> response effect
+    n1response = pdata(p).response~=[0;pdata(p).response(1:end-1)];% response repetition bias
+    
+    n1r_true = pdata(p).angle_warp(n1response==true,:);
+    n1r_false = pdata(p).angle_warp(n1response==false,:);
+    
+    %OG: average angle_warp --> same congruency in trial n & n-1
+    %{
+    congs = pdata(p).congruency == pdata(p).previous_congruency;
+    
+    same_cong = pdata(p).angle_warp(congs==true,:);
+    diff_cong = pdata(p).angle_warp(congs==false,:);
+    
+    %OG: average angle_warp --> same congruencies AND same response
+    
+    cong_resp = congs & n1response;
+    
+    cong_resp_true = pdata(p).angle_warp(cong_resp==true,:);
+    cong_resp_false= pdata(p).angle_warp(cong_resp==false,:);
+    %}
 end
-% plot mean movements
+
+% OG: plot mean angles current congruency (OG)
 figure;hold on
-errorArea(mean(cx),ste(cx),'b');errorArea(mean(ix),ste(ix),'r');
-legend('congruent','incongruent');xlabel('time slice');ylabel('X Coordinate (px)');
+fig=errorArea(mean(ca),ste(ca),'b');errorArea(mean(ia),ste(ia),'r');
+legend('congruent','incongruent');xlabel('warped step');ylabel('angle (radian)');
+title('average warp angle for congruent/incongruent')
+ylim([-1, 0.4]);
+
+% OG: plot mean angles previous congruency
+fig=figure;hold on
+errorArea(mean(pca),ste(pca),'b');errorArea(mean(pia),ste(pia),'r');
+legend('prev congruent','prev incongruent');xlabel('warped step');ylabel('angle (radian)');
+title('average warp angle for previous congruent/incongruent')
+ylim([-1, 0.4]);
+
+% OG: plot mean angles response effect
+figure;hold on
+errorArea(mean(n1r_false),ste(n1r_false),'b');errorArea(mean(n1r_true),ste(n1r_true),'r');
+legend('same response','diff response');xlabel('warped step');ylabel('angle (radian)');
+title('average warp angle for same/different response')
+ylim([-1, 0.4]);
+
+% OG: plot mean angles congruency comparison
+%{
+figure;hold on
+errorArea(mean(same_cong),ste(same_cong),'b');errorArea(mean(diff_cong),ste(diff_cong),'r');
+legend('same cong','diff cong');xlabel('warped step');ylabel('angle (radian)');
+title('average warp angle for same/different congruency')
+ylim([-1, 0.4]);
+%}
+
+% OG: plot mean angles con+resp
+%{
+figure;hold on
+errorArea(mean(cong_resp_true),ste(cong_resp_true),'b');errorArea(mean(cong_resp_false),ste(cong_resp_false),'r');
+legend('same cong+resp','diff con+resp');xlabel('warped step');ylabel('angle (radian)');
+title('average warp angle for same/different congruency and response')
+ylim([-1, 0.4]);
+%}
+
+%OG: plot of angle_warp for participant 1 (as an example)
+
+% figure; %plot of warped angles of trials
+% plot(pdata(1).angle_warp,1:100);
+% title('all warped angle - subject #1')
+% xlabel('angle in radian measure')
+% ylabel('warp step')
+
+figure; % plot of warped angles for congurent trials
+plot(1:100,pdata(1).angle_warp(pdata(1).congruency==1,:)); 
+title('congruent warped angle - subject #1')
+ylabel('angle (radian)')
+xlabel('warped step')
+
+figure; % plot of warped angles for incongurent trials
+plot(1:100,pdata(1).angle_warp(pdata(1).congruency==2,:)); %switched axis: x - angle; y - warp step
+title('incongruent warped angle - subject #1')
+ylabel('angle (radian)')
+xlabel('warped step')
+
+%OG: sorting and averaging warped angles for each congruency sequence: cc, ic, ci, & ii
+%{
+clear cc ic ci ii
+for p=1:length(pdata)
+    n1c=[0;pdata(p).congruency(1:end-1)];
+    cc(p,:)=nanmean(pdata(p).angle_warp(pdata(p).congruency==1 & n1c==1,:));%bp: nanmeans extracts mean from a dataset that ignores nan values
+    ci(p,:)=nanmean(pdata(p).angle_warp(pdata(p).congruency==2 & n1c==1,:));%bp: nanmeans extracts mean from a dataset that ignores nan values
+    ic(p,:)=nanmean(pdata(p).angle_warp(pdata(p).congruency==1 & n1c==2,:));%bp: nanmeans extracts mean from a dataset that ignores nan values
+    ii(p,:)=nanmean(pdata(p).angle_warp(pdata(p).congruency==2 & n1c==2,:));%bp: nanmeans extracts mean from a dataset that ignores nan values
+end
+
+%OG: plot all four mean angle-arrays in one figure
+figure;hold on
+errorArea(mean(cc),ste(cc),'b');errorArea(mean(ci),ste(ci),'r');
+errorArea(mean(ic),ste(ic),'c');errorArea(mean(ii),ste(ii),'m');
+legend('cc','ci','ic','ii');xlabel('warped step');ylabel('angle (radian)');
+title('warped angles for cc, ci, ic, & ii')
+ylim([-1, 0.4]);
+%}
 
 % check movement quality: how straight is each movement and how many movements show returns (y direction should be increasing constantly (=1)
 % BP: Check movement consistency by calculating the movement index (how consistent/straight was the upwards movement, how many backwards movements occurred)
@@ -118,11 +222,18 @@ allcong=vertcat(pdata.congruency);
 
 % plot heatmaps of conditions
 figure;colormap('hot')
+
+%OG: Changed the scaling --> from e.g. -7:0:2 to -7:0.1:7
+% now all deviation trajectory is visible (exceeding the x=2 limitation)
+% Also, now the data bins are of size 0.1x0.1 --> the previous step-size of
+% "0" didn't work, so matlab presumably put in a default step size, which
+% was bigger (-7:0.1:7 now creates an array from -7 to 7 in 0.1 steps)
 subplot(1,2,1);
-imagep2d(allx(allcong==1,:),-ally(allcong==1,:),-7:0:2,-12:0:3,[],[],1);
+imagep2d(allx(allcong==1,:),-ally(allcong==1,:),-7:0.1:7,-2:0.1:12,[],[],1);
 title('congruent')
+
 subplot(1,2,2);
-imagep2d(allx(allcong==2,:),-ally(allcong==2,:),-7:0:2,-12:0:3,[],[],1);
+imagep2d(allx(allcong==2,:),-ally(allcong==2,:),-7:0.1:7,-2:0.1:12,[],[],1);
 title('incongruent')
 
 % plot heatmap of velocity (=consistency of movement)
@@ -131,28 +242,50 @@ imagep(allvel,[],[],[],1)
 title('velocity (px/ms)')
 
 
-
 %% perform TCMR
 clear betas
 figure
 for p = 1:length(pdata)  
     % NOTE BP: Modification are required here depending on number of predictor utilized
     % calc regressors of each participant
-    n1response = pdata(p).response~=[0;pdata(p).response(1:end-1)];% response repetition bias
+    n1response = pdata(p).response~=[0;pdata(p).response(1:end-1)];% response repetition bias (BP: 1 = response switch, 0 = response repeat)
+    
+    %OG: congruency effect --> same congruency in trial n and trial n-1
     congs = pdata(p).congruency;% congruency
-    pre_cong = pdata(p).previous_congruency;
+%     pre_cong = [1;congs(1:end-1)]; % double check, what
+%     .previous_congruency is coding
+    pre_cong=pdata(p).previous_congruency; % OG: previous congruency
+    %adaptation = -(congs==pre_cong); % OG: conflict adaptation effect (needs both congruency + previous congruency)
+    
+    % OG: definition of n1response_x_adaptation regressor
+    n1response=normScore(n1response,[],-1,1); %OG: normScore is the function, that's also inside normalizeRegressors
+    %adaptation=normScore(adaptation,[],-1,1);
+    %n1response_x_adaptation = -adaptation.*n1response; 
+    congs_norm = normScore(congs,[],-1,1);
+    pre_cong_norm = normScore(pre_cong,[],-1,1);
+
+    % BP: include 3 way interaction between response bias, previous
+    % congruency and current congruency
+    three_way_int = congs_norm .* pre_cong .* n1response;
+    
     % BP: this creates a data array of 0 and 1 with 1 representing a change in responseN-1 vs responseN, this predictor is used to test if response repetition across trials influence angle trajectory
     % NOTE BP: this should also change depending on predictor numbers
     % concatenate regressors and normalize each to [-1,1]
-    regressors = normalizeRegressors([n1response, congs, pre_cong]); 
+    
+    % OG: n1response excluded as regressor & n1response_x_adaptation included
+    regressors = normalizeRegressors([congs, pre_cong, n1response, three_way_int]); 
     % BP: the code above generates three arrays of regresssor where changes  in responseN-1 vs responseN is coded as 1 and repetition is coded as -1.-
     % -Also congruent trials are coded as -1 and incongruent = 1, so that it
     % matches shift toward target will be positive when we run the analysis.
     % pre_cong is where previous congruent = -1 and previous incongruent = 1
     
     %define data for TCMR
+    % OG: Only take the first 80 data points per subject
+    % --> reason: presumably "aiming behaviour" at the end of the
+    % trajectory (s. figure of warped angles of subject #1)
+    % regdata=pdata(p).angle_warp(:,1:80); %limite trajectory data to 80 steps
     regdata=pdata(p).angle_warp;
-    
+
     %catch plotted information from TCMR
     subplots(length(pdata),p); 
     
@@ -166,6 +299,13 @@ for p = 1:length(pdata)
     %-of data arraries with N predictors number of row so here the 1st row
     %-is the beta values for response repetition and the 2nd row is congruency
 end
+
+% OG: plotting of betas for congruency per subject
+figure;
+plot(squeeze(betas(1,:,:)));
+title('betas for congruency per subject')
+ylabel('beta weight')
+xlabel('warped step')
 
 %% determine some process parameters diretly from data
 peaks=findStatPeaks(betas,'jackknife');
@@ -220,14 +360,17 @@ figure
 
 %% save parameters for statistical analyis in external software (e.g. JASP)
 % BP: modify if necessary
+%{
 saveCSV('fit_parameters.csv',{'n1response_time','n1response_width',...
                               'n1response_strength','cong_time','cong_width','cong_strength','precong_time','precong_width','precong_strength'},...
         [squeeze(fitparams(1,:,:))',squeeze(fitparams(2,:,:))',squeeze(fitparams(3,:,:))']);
-    
+%}    
 %% write table with data to commandline
+%{
 writeParameterTable(fitparams,fitvalues); %bp: the values in brackets in the output is SEs.
 writePeakTable(peaks);
 writeSegmentTable(segments);
+%}
 
 %% plot results summary for TCMR and fitting results
 figure;clear s
@@ -244,6 +387,6 @@ plotModelLines(fitparams,0.1);
 %bp:plotModelLines adds marker lines above a graph (e.g. by plotRegression) indicating the gaussian paramaters extracted by fitRegression
 xlabel('time slice');ylabel('\beta weight')
 title('Fitted betas') % bp: title of figure, change if necessary
-legend({'Reponse Bias','Interference','Cong.seq'}) % bp: legend of figure, change if necessary
+legend({'Congruency','Previous Congruency','Response bias', 'Three way interaction'}) % bp: legend of figure, change if necessary
 linkaxes(s)
 
