@@ -4,7 +4,7 @@
 # Email: dpen466@aucklanduni.co.nz
 # Github: https://github.com/bp30
 
-# This script processes AllTrials.txt (behaviour data) and dynamics.txt (trajectory data) files from the Flanker task (2016) for each participant
+# This script processes AllTrials.txt (behavioural data) and dynamics.txt (trajectory data) files from the Flanker task (2016) for each participant
 # It iterates over the number of participants and extract necessary information from AllTrials.txt and dynamics.txt, then convert these to a csv file and save in their respective folders
 # The Convert2Scherbaum.m script then intergrate these csv files to the format appropriate for TCMR analysis.
 #######
@@ -62,7 +62,7 @@ for (x in seq(1:folders_n)){
       V4 = V4 - 1, # V4 = TargetLocation: 1 = left and 2 = right in the recoded variable
       V6 = V6 - 1, # V6 = LocationTouched: 1 = left and 2 = right in the recoded variable
       Congruency = ifelse(V22 == 1 | V22 == 2, 1, 2), # V22 = Trialtype: 1 = Congruent and 2 = Incongruent in the recoded variable
-      RT = V8 + V9) # V8 = initation time and V9 = movement time: sum of both is RT
+      RT = V8 + V9) # V8 = initiation time and V9 = movement time: sum of both is RT
   
   ## Create previous response, previous congruency and trial sequence variables.
   trials.df <- trials.df %>% 
@@ -102,6 +102,7 @@ for (x in seq(1:folders_n)){
   dynamics.df <- dynamics.df %>% 
     filter(V5 >= 1, # V5 = Block
            V10 == 1, # V10 = accuracy
+           V25 == 0, # V27 = droppedTrial
            !V1 %in% rm) # remove first trial of each block
   
   ## Collate all necessary columns to the cleaned data file (researchers should check if the outputed file is correct)
